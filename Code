@@ -1,0 +1,122 @@
+import numpy as np
+import os
+import matplotlib.pyplot as plt
+import cv2
+from PIL import Image
+import face_recognition
+from math import sqrt
+
+haar_face_cascade = cv2.CascadeClassifier('C:/Users/HP/Downloads/haarcascade_frontalface_default.xml')
+def convertToRGB(BGRimg): 
+    return cv2.cvtColor(BGRimg, cv2.COLOR_BGR2RGB)
+    
+def confidence_Score(faces,neigbors):
+    numerator = faces-1
+    denominator = neigbors-5
+    confidence_score = (numerator/denominator)*300
+    return confidence_score
+    
+    
+def face_detection(): 
+    image_location = input("Enter the location of your image")
+    #image_location has to be of the form - 'F:/selfie/Selfie/adhaark.jpg'
+    #read the image
+    test = cv2.imread(image_location)
+    
+    #resize the image in size 512x512
+    test= cv2.resize(test, (512,512))
+    
+    #convert the image in grayscale
+    gray_img = cv2.cvtColor(test, cv2.COLOR_BGR2GRAY)
+    
+    #Iterating over different values of min_neigbors to find the best of them 
+    for neighbors in range(5,50,3):
+        faces = haar_face_cascade.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=neighbors)
+        faces_5 = len(haar_face_cascade.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=5))
+        
+        
+        if len(faces)==1:
+            print ('1 face found corresponding to' , neighbors, 'neighbors')
+            for (x, y, w, h) in faces:
+                cv2.rectangle(test, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                plt.imshow(convertToRGB(test))
+                plt.show()
+                
+                
+                if neighbors==5:
+                    print ('ConfidenceScore = 100%')
+                    
+                else:
+                    print ('ConfidenceScore =' ,confidence_Score(faces_5,neighbors) , '%')
+            break
+            
+    if len(faces)>1:
+        #it is able to detect but there are more than one faces in the image
+        print ("Face Undetectable. Upload another image")
+        
+    if len(faces)==0:
+        print ("No face found")
+        
+def ROI(img,name): 
+
+    test = cv2.imread(img)
+    test= cv2.resize(test, (512,512))
+    gray_img = cv2.cvtColor(test, cv2.COLOR_BGR2GRAY)
+    for neighbor in range(5,50,3):
+        faces = haar_face_cascade.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=neighbor)        
+        
+        if len(faces)==1:
+
+            for (x, y, w, h) in faces:
+                cv2.rectangle(test, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+                test=test[y:y+h,x:x+w]
+                plt.imshow(convertToRGB(test))
+                plt.show()
+
+                test= cv2.resize(test, (222,222))
+                im = Image.fromarray(test)
+                img = img.replace((img.split('/')[-1]) , "")
+                im.save(img+name+'.jpg')
+                
+                
+            break
+            
+    if len(faces)>1:
+        #it is able to detect but there are more than one faces in the image
+        print ("Face Undetectable. Upload another image")
+        
+    if len(faces)==0:
+        #it is able to detect but there are more than one faces in the image
+        print ("No face found")
+        
+def task2():
+    selfie_location = input("Enter the location of your selfie")
+    #selfie_location has to be of the form - 'F:/selfie/Selfie/image.jpg'
+    ROI(selfie_location,'selfie')
+    
+    aadhar_location = input("Enter the location of your aadhar")
+    #aadhar_location has to be of the form - 'F:/selfie/Selfie/image.jpg'
+    ROI(aadhar_location,'aadhar')
+    
+    selfie_location = selfie_location.replace((selfie_location.split('/')[-1]) , "selfie.jpg")
+    aadhar_location = aadhar_location.replace((aadhar_location.split('/')[-1]) , "aadhar.jpg")
+    
+    known_image = face_recognition.load_image_file(selfie_location)
+    unknown_image = face_recognition.load_image_file(aadhar_location)
+
+    known_encoding = face_recognition.face_encodings(known_image)[0]
+    unknown_encoding = face_recognition.face_encodings(unknown_image)[0]
+
+    results = face_recognition.compare_faces([known_encoding], unknown_encoding)
+    
+    difference= known_encoding-unknown_encoding
+    sum = 0
+    
+    for i in range(0,128):   
+        sum = sum + (difference[i]*(difference[i]))
+
+    confidence = "%.2f" % round( (100 - ((sqrt(sum/128))*100 )),2)   
+    confidence= str(confidence)
+    return results, ('Confidence Score = '+ confidence+'% of the prediction being correct')
+    
