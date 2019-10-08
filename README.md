@@ -1,4 +1,17 @@
 # Face-detection-and-recognition
+This code is in response of a 3 days assignment that was given to me that consisted of two stages:
+### Problem Statement: Build a face match authentication system to validate the ID proof.
+###### Task 1: Face Detection
+-Build a face detector to identify faces in both the images.
+I/P: Image
+O/P: Face boundary (bounding box) and confidence score (i.e. how sure the algorithm is that it is a
+face)
+###### Task 2: Face Recognition
+-Given Image_1, check if the same person is present in Image_2 and if yes provide a metric as to how
+good the match is ( i.e. a confidence score)
+I/P: (Image_1 , Image_2)
+O/P: Match (Yes or No) , Confidence Score
+
 ## Code 
 Functions that have been used are:
 ###### 1. convertToRgb -
